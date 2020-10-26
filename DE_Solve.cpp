@@ -32,18 +32,11 @@ namespace phoenix = boost::phoenix;
 typedef boost::numeric::ublas::vector< double > vector_type;
 typedef boost::numeric::ublas::matrix< double > matrix_type;
 
-struct model_coefficients
-{
-    double A, B, C, e0, e2, e4;
-//        A = 1.0; B = 0.0; C = 0.0;
-        //e0 = 0.0005; e2 = -0.05; e4 = 1.0;
-  //      e0 = 1.0; e2 = -4.0; e4 = 1.0;
-};
 
-const model_coefficients D{1.0, 0, 0, 0.0000005, -0.05, 1.0};//{1, 0,0, 1.0, -4.0, 1.0};
+model_coefficients D;///{1.0, 0, 0, 0.0000005, -0.05, 1.0};//{1, 0,0, 1.0, -4.0, 1.0};
 //{1.0, 0, 0, 0.0000005, -0.05, 1.0}; outer 0.316 inner 0.05
 
-void vdp_stiff::operator()( const vector_type &x , vector_type &dxdt , double t )
+void vdp_stiff::operator()( const vector_type &x , vector_type &dxdt , double t)
 {
     double A, B, C, e0, e2, e4;
     A = D.A; B = D.B; C = D.C;
@@ -55,7 +48,7 @@ void vdp_stiff::operator()( const vector_type &x , vector_type &dxdt , double t 
     //dxdt[1] = -x[0] - mu * x[1] * (x[0]*x[0]-1.0);
 }
 
-void vdp_stiff_jacobi::operator()( const vector_type &x , matrix_type &J , const double &t , vector_type &dfdt )
+void vdp_stiff_jacobi::operator()( const vector_type &x , matrix_type &J , const double &t , vector_type &dfdt)
 {
     double A, B, C, e0, e2, e4;
     A = D.A; B = D.B; C = D.C;
@@ -73,19 +66,25 @@ void vdp_stiff_jacobi::operator()( const vector_type &x , matrix_type &J , const
     dfdt[1] = 0.0;
 }
 
-void general()
+void DE_Solve(model_coefficients &nD, const double *initial, const double *time )
 {
+    D = nD;
     //[ integrate_stiff_system
     vector_type x( 2 );
 
     /// initial conditions
-        x[0] = 0.7;
-        x[1] = 0.0;
+        x[0] = initial[0];//0.7;
+        x[1] = initial[1];//0.0;
+    double time_start, time_end, time_d;
+        time_start = time[0];
+        time_end = time[1];
+        time_d = time[2];
+
 
     std::ofstream fout("Rosenbrock4.txt");
     size_t num_of_steps = integrate_const( make_dense_output< rosenbrock4< double > >( 1.0e-6 , 1.0e-6 ) ,
             std::make_pair( vdp_stiff() , vdp_stiff_jacobi() ) ,
-            x , 0.0 , 1000.0 , 0.01
+            x , time_start, time_end, time_d
             , fout << phoenix::arg_names::arg2 << " " << phoenix::arg_names::arg1[0] << " " << phoenix::arg_names::arg1[1] << "\n"
             );
     //]
