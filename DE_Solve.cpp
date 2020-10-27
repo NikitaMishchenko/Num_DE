@@ -14,6 +14,7 @@
  */
 
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <utility>
 
@@ -66,7 +67,7 @@ void vdp_stiff_jacobi::operator()( const vector_type &x , matrix_type &J , const
     dfdt[1] = 0.0;
 }
 
-void DE_Solve(model_coefficients &nD, const double *initial, const double *time )
+void DE_Solve(model_coefficients &nD, const double *initial, const double *time, std::string output_file_name)
 {
     D = nD;
     //[ integrate_stiff_system
@@ -81,12 +82,13 @@ void DE_Solve(model_coefficients &nD, const double *initial, const double *time 
         time_d = time[2];
 
 
-    std::ofstream fout("Rosenbrock4.txt");
+    std::ofstream fout(output_file_name);///"Rosenbrock4.txt"
     size_t num_of_steps = integrate_const( make_dense_output< rosenbrock4< double > >( 1.0e-6 , 1.0e-6 ) ,
             std::make_pair( vdp_stiff() , vdp_stiff_jacobi() ) ,
             x , time_start, time_end, time_d
-            , fout << phoenix::arg_names::arg2 << " " << phoenix::arg_names::arg1[0] << " " << phoenix::arg_names::arg1[1] << "\n"
-            );
+            , fout << phoenix::arg_names::arg2 << " "
+                    << phoenix::arg_names::arg1[0] << " "
+                     << phoenix::arg_names::arg1[1] << "\n" );
     //]
     fout.close();
     std::clog << num_of_steps << std::endl;

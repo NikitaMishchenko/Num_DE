@@ -2,6 +2,7 @@
 #define DE_SOLVE_H_INCLUDED
 
 #include <utility>
+#include <string>
 
 #include <boost/numeric/odeint.hpp>
 #include <boost/phoenix/core.hpp>
@@ -32,6 +33,6 @@ struct vdp_stiff_jacobi
     void operator()( const vector_type &x , matrix_type &J , const double &t , vector_type &dfdt );
 };
 
-void DE_Solve(model_coefficients &, const double*, const double*);
+void DE_Solve(model_coefficients &, const double*, const double*, std::string);
 
 #endif // DE_SOLVE_H_INCLUDED
