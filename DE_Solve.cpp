@@ -67,42 +67,48 @@ void vdp_stiff_jacobi::operator()( const vector_type &x , matrix_type &J , const
     dfdt[1] = 0.0;
 }
 
-void DE_Solve(model_coefficients &nD, const double *initial, const double *time, std::string output_file_name)
+void DE_Solve(model_coefficients &nD, const double *initial, const double *time, const double &abs_err, const double &real_err, std::string output_file_name)
 {
     D = nD;
     //[ integrate_stiff_system
     vector_type x( 2 );
 
     /// initial conditions
-        x[0] = initial[0];//0.7;
-        x[1] = initial[1];//0.0;
+        x[0] = initial[0];
+        x[1] = initial[1];
     double time_start, time_end, time_d;
         time_start = time[0];
         time_end = time[1];
         time_d = time[2];
 
 
-    std::ofstream fout(output_file_name);///"Rosenbrock4.txt"
-    size_t num_of_steps = integrate_const( make_dense_output< rosenbrock4< double > >( 1.0e-6 , 1.0e-6 ) ,
+    std::ofstream fout1(output_file_name + "rb4.txt");
+    size_t num_of_steps = integrate_const( make_dense_output< rosenbrock4< double > >(  abs_err, real_err ) ,
             std::make_pair( vdp_stiff() , vdp_stiff_jacobi() ) ,
             x , time_start, time_end, time_d
-            , fout << phoenix::arg_names::arg2 << " "
+            , fout1 << phoenix::arg_names::arg2 << " "
                     << phoenix::arg_names::arg1[0] << " "
                      << phoenix::arg_names::arg1[1] << "\n" );
     //]
-    fout.close();
+    fout1.close();
     std::clog << num_of_steps << std::endl;
 
     //[ integrate_stiff_system_alternative
     vector_type x2( 2 );
-    // initial conditions
-    for (int i=0; i<2; i++)
-        x2[i] = 1.0; //(1.0 * rand()) / RAND_MAX;
+    /// initial conditions
+        x2[0] = initial[0];
+        x2[1] = initial[1];
 
-    //size_t num_of_steps2 = integrate_const( make_dense_output< runge_kutta_dopri5< vector_type > >( 1.0e-6 , 1.0e-6 ) ,
-    //        vdp_stiff() , x2 , 0.0 , 1000.0 , 1.0
-    //        , cout << phoenix::arg_names::arg2 << " " << phoenix::arg_names::arg1[0] << " " << phoenix::arg_names::arg1[1] << "\n"
-    //        );
+
+    std::ofstream fout2(output_file_name + "rkd5.txt");
+    size_t num_of_steps2 = integrate_const( make_dense_output< runge_kutta_dopri5< vector_type > >( abs_err, real_err ) ,
+            vdp_stiff(),
+            x2 , time_start , time_end , time_d
+            , fout2 << phoenix::arg_names::arg2 << " "
+                     << phoenix::arg_names::arg1[0] << " "
+                        << phoenix::arg_names::arg1[1] << "\n"
+            );
     //]
-    //clog << num_of_steps2 << endl;
+    fout2.close();
+    std::clog << num_of_steps2 << std::endl;
 }
